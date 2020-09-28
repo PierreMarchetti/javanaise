@@ -11,6 +11,7 @@ package jvn;
 
 import java.rmi.*;
 import java.io.*;
+import java.util.HashMap;
 
 
 /**

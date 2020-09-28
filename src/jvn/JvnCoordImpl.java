@@ -9,8 +9,14 @@
 
 package jvn;
 
+import irc.Irc;
+import irc.Sentence;
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.Serializable;
+import java.util.HashMap;
 
 
 public class JvnCoordImpl
@@ -22,7 +28,12 @@ public class JvnCoordImpl
      *
      */
     private static final long serialVersionUID = 1L;
+    HashMap<String, JvnObject> jvnObjectMap;
+    private static JvnCoordImpl jc = null;
 
+
+
+    private int lastNumId;//incrémenté à chaque sentence
     /**
      * Default constructor
      *
@@ -30,6 +41,18 @@ public class JvnCoordImpl
      **/
     private JvnCoordImpl() throws Exception {
         // to be completed
+        jvnObjectMap = new HashMap<>();
+    }
+
+    public static JvnCoordImpl getInstance() {
+        if (jc == null) {
+            try {
+                jc = new JvnCoordImpl();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return jc;
     }
 
     /**
@@ -40,8 +63,9 @@ public class JvnCoordImpl
      **/
     public int jvnGetObjectId()
             throws java.rmi.RemoteException, jvn.JvnException {
-        // to be completed
-        return 0;
+        int i = lastNumId;
+        lastNumId++;
+        return i;
     }
 
     /**
@@ -49,13 +73,12 @@ public class JvnCoordImpl
      *
      * @param jon : the JVN object name
      * @param jo  : the JVN object
-     * @param joi : the JVN object identification
      * @param js  : the remote reference of the JVNServer
      * @throws java.rmi.RemoteException,JvnException
      **/
     public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js)
             throws java.rmi.RemoteException, jvn.JvnException {
-        // to be completed
+        jvnObjectMap.put(jon,jo);
     }
 
     /**
@@ -68,7 +91,7 @@ public class JvnCoordImpl
     public JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
             throws java.rmi.RemoteException, jvn.JvnException {
         // to be completed
-        return null;
+        return jvnObjectMap.get(jon);
     }
 
     /**
@@ -108,6 +131,7 @@ public class JvnCoordImpl
     public void jvnTerminate(JvnRemoteServer js)
             throws java.rmi.RemoteException, JvnException {
         // to be completed
+        jvnObjectMap.remove(js);
     }
 }
 

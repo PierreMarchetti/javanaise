@@ -9,6 +9,9 @@
 
 package jvn;
 
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.*;
 import java.util.HashMap;
@@ -24,8 +27,7 @@ public class JvnServerImpl
     private static final long serialVersionUID = 1L;
     // A JVN server is managed as a singleton
     private static JvnServerImpl js = null;
-    private HashMap<String, JvnObject> jvnObjectMap;
-    private int lastNumId;//incrémenté à chaque sentence
+    private JvnRemoteCoord coord;
 
     /**
      * Default constructor
@@ -35,8 +37,9 @@ public class JvnServerImpl
     private JvnServerImpl() throws Exception {
         super();
         // to be completed
-        jvnObjectMap = new HashMap<>();
-        lastNumId = 0;
+        Registry registry = LocateRegistry.getRegistry("localhost",2001);
+        coord = (JvnRemoteCoord) registry.lookup("Service");
+        System.out.println("Connexion Server");
     }
 
     /**
@@ -64,6 +67,11 @@ public class JvnServerImpl
     public void jvnTerminate()
             throws jvn.JvnException {
         // to be completed
+        try {
+            coord.jvnTerminate(this);
+        }catch (RemoteException e){
+            throw new JvnException(e.getMessage());
+        }
     }
 
     /**
@@ -75,8 +83,11 @@ public class JvnServerImpl
     public JvnObject jvnCreateObject(Serializable o)
             throws jvn.JvnException {
         // to be completed
-        JvnObjectImpl jvnObjectImpl = new JvnObjectImpl(lastNumId++, o);
-        return jvnObjectImpl;
+        try {
+            return new JvnObjectImpl(coord.jvnGetObjectId(), o);
+        }catch (RemoteException e){
+            throw new JvnException(e.getMessage());
+        }
     }
 
     /**
@@ -89,7 +100,11 @@ public class JvnServerImpl
     public void jvnRegisterObject(String jon, JvnObject jo)
             throws jvn.JvnException {
         // to be completed
-        jvnObjectMap.put(jon, jo);
+        try {
+            coord.jvnRegisterObject(jon,jo,this);
+        }catch (RemoteException e){
+            throw new JvnException(e.getMessage());
+        }
     }
 
     /**
@@ -102,7 +117,11 @@ public class JvnServerImpl
     public JvnObject jvnLookupObject(String jon)
             throws jvn.JvnException {
         // to be completed
-        return jvnObjectMap.get(jon);
+        try {
+            return coord.jvnLookupObject(jon,this);
+        }catch (RemoteException e){
+            throw new JvnException(e.getMessage());
+        }
     }
 
     /**
