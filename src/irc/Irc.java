@@ -26,8 +26,9 @@ public class Irc {
     /**
      * main method
      * create a JVN object nammed IRC for representing the Chat application
+     * @throws Exception 
      **/
-    public static void main(String argv[]) {
+    public static void main(String argv[]) throws Exception {
         try {
             // initialize JVN
             JvnServerImpl js = JvnServerImpl.jvnGetServer();
@@ -46,7 +47,8 @@ public class Irc {
             new Irc(jo);
 
         } catch (Exception e) {
-            System.out.println("IRC problem : " + e.getMessage());
+//	            System.out.println("IRC problem : " + e.getMessage());
+        	throw e;
         }
     }
 

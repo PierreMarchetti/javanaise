@@ -38,7 +38,7 @@ public class JvnServerImpl
         super();
         // to be completed
         Registry registry = LocateRegistry.getRegistry("localhost",2001);
-        coord = (JvnRemoteCoord) registry.lookup("Service");
+        coord = (JvnRemoteCoord) registry.lookup("IRC");
         System.out.println("Connexion Server");
     }
 

@@ -12,13 +12,11 @@ public class CoordMain {
         try {
             // initialize coord
             JvnCoordImpl jc = JvnCoordImpl.getInstance();
-            JvnRemoteCoord h_stub = (JvnRemoteCoord) UnicastRemoteObject.exportObject(jc,0);
+           
 
             // Register the remote object in RMI registry with a given identifier
-            Registry registry= LocateRegistry.getRegistry();
-            registry.rebind("Service", h_stub);
-
-            Registry registryClients= LocateRegistry.getRegistry("localhost",3500);
+            Registry registry= LocateRegistry.getRegistry("127.0.0.1",2001);
+            registry.rebind("IRC", jc);
 
             System.out.println("Connexion Coord");
 
