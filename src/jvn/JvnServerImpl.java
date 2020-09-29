@@ -14,6 +14,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -28,6 +29,7 @@ public class JvnServerImpl
     // A JVN server is managed as a singleton
     private static JvnServerImpl js = null;
     private JvnRemoteCoord coord;
+    private ArrayList<JvnObject> jvnObjectList;
 
     /**
      * Default constructor
@@ -39,6 +41,7 @@ public class JvnServerImpl
         // to be completed
         Registry registry = LocateRegistry.getRegistry("localhost",2001);
         coord = (JvnRemoteCoord) registry.lookup("IRC");
+        jvnObjectList = new ArrayList<JvnObject>();
         System.out.println("Connexion Server");
     }
 
@@ -82,9 +85,10 @@ public class JvnServerImpl
      **/
     public JvnObject jvnCreateObject(Serializable o)
             throws jvn.JvnException {
-        // to be completed
         try {
-            return new JvnObjectImpl(coord.jvnGetObjectId(), o);
+        	JvnObject jo = new JvnObjectImpl(coord.jvnGetObjectId(), o, JvnLockState.WLT);
+            jvnObjectList.add(jo);
+            return jo;
         }catch (RemoteException e){
             throw new JvnException(e.getMessage());
         }
@@ -99,7 +103,6 @@ public class JvnServerImpl
      **/
     public void jvnRegisterObject(String jon, JvnObject jo)
             throws jvn.JvnException {
-        // to be completed
         try {
             coord.jvnRegisterObject(jon,jo,this);
         }catch (RemoteException e){
@@ -116,9 +119,10 @@ public class JvnServerImpl
      **/
     public JvnObject jvnLookupObject(String jon)
             throws jvn.JvnException {
-        // to be completed
         try {
-            return coord.jvnLookupObject(jon,this);
+        	JvnObject jo = coord.jvnLookupObject(jon,this);
+            jvnObjectList.add(jo);
+            return jo;
         }catch (RemoteException e){
             throw new JvnException(e.getMessage());
         }
@@ -133,8 +137,11 @@ public class JvnServerImpl
      **/
     public Serializable jvnLockRead(int joi)
             throws JvnException {
-        // to be completed
-        return null;
+        try {
+			return coord.jvnLockRead(joi, this);
+		} catch (RemoteException e) {
+			throw new JvnException(e.getMessage());
+		}
 
     }
 
@@ -147,8 +154,11 @@ public class JvnServerImpl
      **/
     public Serializable jvnLockWrite(int joi)
             throws JvnException {
-        // to be completed
-        return null;
+        try {
+			return coord.jvnLockWrite(joi, this);
+		} catch (RemoteException e) {
+			throw new JvnException(e.getMessage());
+		}
     }
 
 
@@ -162,7 +172,15 @@ public class JvnServerImpl
      **/
     public void jvnInvalidateReader(int joi)
             throws java.rmi.RemoteException, jvn.JvnException {
-        // to be completed
+        JvnObject jo = jvnObjectList.stream().filter(object -> {
+			try {
+				return joi == object.jvnGetObjectId();
+			} catch (JvnException e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}).findFirst().get();
+        
+        jo.jvnInvalidateReader();
     }
 
     ;
@@ -176,8 +194,15 @@ public class JvnServerImpl
      **/
     public Serializable jvnInvalidateWriter(int joi)
             throws java.rmi.RemoteException, jvn.JvnException {
-        // to be completed
-        return null;
+        JvnObject jo = jvnObjectList.stream().filter(object -> {
+			try {
+				return joi == object.jvnGetObjectId();
+			} catch (JvnException e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}).findFirst().get();
+        
+        return jo.jvnInvalidateWriter();
     }
 
     ;
@@ -191,8 +216,15 @@ public class JvnServerImpl
      **/
     public Serializable jvnInvalidateWriterForReader(int joi)
             throws java.rmi.RemoteException, jvn.JvnException {
-        // to be completed
-        return null;
+        JvnObject jo = jvnObjectList.stream().filter(object -> {
+			try {
+				return joi == object.jvnGetObjectId();
+			} catch (JvnException e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}).findFirst().get();
+        
+        return jo.jvnInvalidateWriterForReader();
     };
 
 }
