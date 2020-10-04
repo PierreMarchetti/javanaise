@@ -40,14 +40,13 @@ public class JvnCoordImpl
     private static JvnCoordImpl jc = null;
     
 
-    private int lastNumId;//incrémenté à chaque sentence
+    private int lastNumId;
     /**
      * Default constructor
      *
      * @throws JvnException
      **/
     private JvnCoordImpl() throws Exception {
-        // to be completed
         jvnRemoteServerMap = new ConcurrentHashMap<>();
         listNameJvnServer = new ConcurrentHashMap<>();
     }
@@ -86,7 +85,6 @@ public class JvnCoordImpl
      **/
     public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js)
             throws java.rmi.RemoteException, jvn.JvnException {
-        // to be completed
         if(jvnRemoteServerMap.get(jo.jvnGetObjectId())==null) {
             jvnRemoteServerMap.put(jo.jvnGetObjectId(), new ArrayList<>());
         }
@@ -107,7 +105,6 @@ public class JvnCoordImpl
      **/
     public JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
             throws java.rmi.RemoteException, jvn.JvnException {
-        // to be completed
         try {
             Integer joi = listNameJvnServer.get(jon);
             if (!jvnRemoteServerMap.get(joi).contains(js)) {
@@ -162,13 +159,11 @@ public class JvnCoordImpl
      **/
     public Serializable jvnLockWrite(int joi, JvnRemoteServer js)
             throws java.rmi.RemoteException, JvnException {
-        // to be completed
-
 
         List<JvnServerState> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
 
         Serializable obj=null;
-
+        
         for (JvnServerState jvnServerState_tmp : jvnRemoteServerList) {
             switch (jvnServerState_tmp.getState()){
             case WLC:
@@ -176,7 +171,6 @@ public class JvnCoordImpl
             case RLT_WLC:
                 obj = jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateWriter(joi);
                 jvnServerState_tmp.setState(JvnLockState.NL);
-                putStateToServer(joi,js,JvnLockState.WLT);
                 break;
             case RLT:
             case RLC:
@@ -186,6 +180,7 @@ public class JvnCoordImpl
         	
 
         }
+        putStateToServer(joi,js,JvnLockState.WLT);
 
         return obj;
     }
@@ -198,8 +193,11 @@ public class JvnCoordImpl
      **/
     public void jvnTerminate(JvnRemoteServer js)
             throws java.rmi.RemoteException, JvnException {
-        // to be completed
         jvnRemoteServerMap.remove(js);
+        
+        for (List<JvnServerState> jssList : jvnRemoteServerMap.values()) {
+			jssList.removeIf(jss -> jss.getJvnRemoteServer().equals(js));
+		}
     }
 
 

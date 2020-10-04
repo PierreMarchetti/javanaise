@@ -71,7 +71,7 @@ public class JvnObjectImpl implements JvnObject {
 		default:
 			break;
 		}
-    	notify();
+    	notifyAll();
     }
 
     @Override
@@ -87,7 +87,7 @@ public class JvnObjectImpl implements JvnObject {
     @Override
     public synchronized void jvnInvalidateReader() throws JvnException {
     	try {
-    		while(state == JvnLockState.RLT || state == JvnLockState.RLT_WLC) {
+    		while(state == JvnLockState.RLT) {
     			wait();
     		}
 			state = JvnLockState.NL;

@@ -71,7 +71,6 @@ public class JvnServerImpl
      **/
     public void jvnTerminate()
             throws jvn.JvnException {
-        // to be completed
         try {
             coord.jvnTerminate(this);
         }catch (RemoteException e){
@@ -188,17 +187,6 @@ public class JvnServerImpl
         if(jo!=null){
             jo.jvnInvalidateReader();
         }
-
-
-        /*JvnObject jo = jvnObjectList.stream().filter(object -> {
-			try {
-				return joi == object.jvnGetObjectId();
-			} catch (JvnException e) {
-				throw new RuntimeException(e.getMessage());
-			}
-		}).findFirst().get();
-        
-        jo.jvnInvalidateReader();*/
     }
 
     ;
@@ -210,7 +198,6 @@ public class JvnServerImpl
      * @return the current JVN object state
      * @throws java.rmi.RemoteException,JvnException
      **/
-    //rétrograde write vers null
     public Serializable jvnInvalidateWriter(int joi)
             throws java.rmi.RemoteException, jvn.JvnException {
 
@@ -226,20 +213,6 @@ public class JvnServerImpl
         }else{
             return jo.jvnInvalidateWriter();
         }
-
-
-
-
-        /*
-        JvnObject jo = jvnObjectList.stream().filter(object -> {
-			try {
-				return joi == object.jvnGetObjectId();
-			} catch (JvnException e) {
-				throw new RuntimeException(e.getMessage());
-			}
-		}).findFirst().get();
-		return jo.jvnInvalidateWriter();*/
-
     }
 
     ;
@@ -251,7 +224,6 @@ public class JvnServerImpl
      * @return the current JVN object state
      * @throws java.rmi.RemoteException,JvnException
      **/
-    //rétrograde write vers read
     public Serializable jvnInvalidateWriterForReader(int joi)
             throws java.rmi.RemoteException, jvn.JvnException {
 
@@ -268,16 +240,6 @@ public class JvnServerImpl
         }else{
             return jo.jvnInvalidateWriterForReader();
         }
-
-        /*JvnObject jo = jvnObjectList.stream().filter(object -> {
-			try {
-				return joi == object.jvnGetObjectId();
-			} catch (JvnException e) {
-				throw new RuntimeException(e.getMessage());
-			}
-		}).findFirst().get();
-        
-        return jo.jvnInvalidateWriterForReader();*/
     };
 
 }
