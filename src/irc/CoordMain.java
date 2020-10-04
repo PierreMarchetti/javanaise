@@ -1,3 +1,7 @@
+/*
+rmiregistry 2001
+*/
+
 package irc;
 
 import jvn.JvnCoordImpl;
