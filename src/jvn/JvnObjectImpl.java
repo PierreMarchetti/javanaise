@@ -45,11 +45,9 @@ public class JvnObjectImpl implements JvnObject {
     @Override
     public void jvnLockWrite() throws JvnException {
     	switch (state) {
-		case WLC:
-			state = JvnLockState.WLT;
-			break;
 		case WLT:
 			throw new JvnException("Lock already taken");
+		case WLC:
 		default:
 	    	JvnServerImpl js = JvnServerImpl.jvnGetServer();
 	    	object = js.jvnLockWrite(id);
@@ -91,8 +89,9 @@ public class JvnObjectImpl implements JvnObject {
     	try {
     		while(state == JvnLockState.RLT || state == JvnLockState.RLT_WLC) {
     			wait();
-    			state = JvnLockState.NL;
     		}
+			state = JvnLockState.NL;
+
 		} catch (InterruptedException e) {
 			throw new JvnException(e.getMessage());
 		}
@@ -103,8 +102,9 @@ public class JvnObjectImpl implements JvnObject {
     	try {
     		while(state == JvnLockState.WLT) {
     			wait();
-    			state = JvnLockState.NL;
+    			
     		}
+    		state = JvnLockState.NL;
 			return object;
 		} catch (InterruptedException e) {
 			throw new JvnException(e.getMessage());
@@ -116,8 +116,9 @@ public class JvnObjectImpl implements JvnObject {
     	try {
     		while(state == JvnLockState.WLT) {
     			wait();
-    			state = JvnLockState.RLT_WLC;
     		}
+			state = JvnLockState.RLC;
+
 			return object;
 		} catch (InterruptedException e) {
 			throw new JvnException(e.getMessage());

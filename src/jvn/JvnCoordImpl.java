@@ -11,6 +11,7 @@ package jvn;
 
 import irc.Irc;
 import irc.Sentence;
+import jdk.internal.util.xml.impl.Pair;
 
 import javax.swing.plaf.nimbus.State;
 import java.rmi.registry.LocateRegistry;
@@ -38,8 +39,7 @@ public class JvnCoordImpl
     ConcurrentHashMap<Integer, List<JvnRemoteServer>> jvnRemoteServerMap;
     ConcurrentHashMap<JvnRemoteServer,JvnLockState> jvnLockStateServ;
     private static JvnCoordImpl jc = null;
-
-
+    
 
     private int lastNumId;//incrémenté à chaque sentence
     /**
@@ -113,6 +113,11 @@ public class JvnCoordImpl
         // to be completed
         try {
             Integer joi = listNameJvnServer.get(jon);
+            if (!jvnRemoteServerMap.get(joi).contains(js)) {
+                jvnRemoteServerMap.get(joi).add(js);
+            }
+            jvnLockStateServ.put(js, JvnLockState.NL);
+            
             return new JvnObjectImpl(joi,null);
         }catch (NullPointerException npe){
             return null;
@@ -135,67 +140,21 @@ public class JvnCoordImpl
 
 
         for (JvnRemoteServer jvnRemoteServ_tmp : jvnRemoteServerList) {
-            switch (jvnLockStateServ.get(jvnRemoteServ_tmp)){
-                case WLC:
-                case WLT:
-                case RLT_WLC:
-                    Serializable obj = jvnRemoteServ_tmp.jvnInvalidateWriterForReader(joi);
-                    jvnLockStateServ.put(js,JvnLockState.RLT);
-                    return obj;
-            }
+
+
+	        switch (jvnLockStateServ.get(jvnRemoteServ_tmp)){
+	            case WLC:
+	            case WLT:
+	            case RLT_WLC:
+	                Serializable obj = jvnRemoteServ_tmp.jvnInvalidateWriterForReader(joi);
+	                jvnLockStateServ.put(js,JvnLockState.RLT);
+	                return obj;
+	        
+        	}
         }
 
         return null;
 
-
-
-
-
-
-
-        /*
-        List<JvnObjectImpl> jvnObjectsSameId = new ArrayList<>();
-        for (Map.Entry jvnObject_tmp : jvnRemoteServerMap.entrySet()) {
-            if (jvnObject_tmp.getValue() instanceof JvnObjectImpl){
-                JvnObjectImpl obj = (JvnObjectImpl)jvnObject_tmp.getValue();
-                if(obj.jvnGetObjectId()==joi){
-                    jvnObjectsSameId.add(obj);
-                }
-            }
-        }
-
-
-
-
-
-        boolean canReadLock = true;
-
-        for (Map.Entry jvnObject_tmp : jvnRemoteServerMap.entrySet()) {
-            if (jvnObject_tmp.getValue() instanceof JvnObjectImpl){
-                JvnObjectImpl obj = (JvnObjectImpl)jvnObject_tmp.getValue();
-                if(obj.jvnGetObjectId()==joi){
-                    switch (obj.state){
-                        case WLT:
-                        case RLT:
-                            jvnObjectsInCache.add(obj);
-                            break;
-                        case WLC:
-                        case RLC:
-                        case RLT_WLC:
-                            return obj;
-                    }
-                }
-            }
-        }
-        if(canReadLock){//on retire le lock des obj qui son dans le cache
-            for(JvnObjectImpl objInCache : jvnObjectsInCache){
-                objInCache.state=JvnLockState.NL;
-            }
-
-        }
-
-        return null;
-        */
     }
 
     /**
@@ -217,17 +176,20 @@ public class JvnCoordImpl
 
         for (JvnRemoteServer jvnRemoteServ_tmp : jvnRemoteServerList) {
             switch (jvnLockStateServ.get(jvnRemoteServ_tmp)){
-                case WLC:
-                case WLT:
-                case RLT_WLC:
-                    obj = jvnRemoteServ_tmp.jvnInvalidateWriter(joi);
-                    jvnLockStateServ.put(jvnRemoteServ_tmp,JvnLockState.NL);
-                    jvnLockStateServ.put(js,JvnLockState.WLT);
-                case RLT:
-                case RLC:
-                    jvnRemoteServ_tmp.jvnInvalidateReader(joi);
-                    jvnLockStateServ.put(jvnRemoteServ_tmp,JvnLockState.NL);
+            case WLC:
+            case WLT:
+            case RLT_WLC:
+                obj = jvnRemoteServ_tmp.jvnInvalidateWriter(joi);
+                jvnLockStateServ.put(jvnRemoteServ_tmp,JvnLockState.NL);
+                jvnLockStateServ.put(js,JvnLockState.WLT);
+                break;
+            case RLT:
+            case RLC:
+                jvnRemoteServ_tmp.jvnInvalidateReader(joi);
+                jvnLockStateServ.put(jvnRemoteServ_tmp,JvnLockState.NL);
             }
+        	
+
         }
 
         return obj;
