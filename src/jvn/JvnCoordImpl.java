@@ -36,8 +36,7 @@ public class JvnCoordImpl
     private static final long serialVersionUID = 1L;
 
     ConcurrentHashMap<String, Integer> listNameJvnServer;
-    ConcurrentHashMap<Integer, List<JvnRemoteServer>> jvnRemoteServerMap;
-    ConcurrentHashMap<JvnRemoteServer,JvnLockState> jvnLockStateServ;
+    ConcurrentHashMap<Integer, List<JvnServerState>> jvnRemoteServerMap;
     private static JvnCoordImpl jc = null;
     
 
@@ -51,7 +50,6 @@ public class JvnCoordImpl
         // to be completed
         jvnRemoteServerMap = new ConcurrentHashMap<>();
         listNameJvnServer = new ConcurrentHashMap<>();
-        jvnLockStateServ = new ConcurrentHashMap<>();
     }
 
     public static JvnCoordImpl getInstance() {
@@ -93,11 +91,10 @@ public class JvnCoordImpl
             jvnRemoteServerMap.put(jo.jvnGetObjectId(), new ArrayList<>());
         }
         if (!jvnRemoteServerMap.get(jo.jvnGetObjectId()).contains(js)) {
-            jvnRemoteServerMap.get(jo.jvnGetObjectId()).add(js);
+            jvnRemoteServerMap.get(jo.jvnGetObjectId()).add(new JvnServerState(js,JvnLockState.WLT));
         }else{
             System.out.println("obj déja dedans : "+jon);
         }
-        jvnLockStateServ.put(js,JvnLockState.WLT);
         listNameJvnServer.put(jon,jo.jvnGetObjectId());
     }
 
@@ -114,9 +111,10 @@ public class JvnCoordImpl
         try {
             Integer joi = listNameJvnServer.get(jon);
             if (!jvnRemoteServerMap.get(joi).contains(js)) {
-                jvnRemoteServerMap.get(joi).add(js);
+                jvnRemoteServerMap.get(joi).add(new JvnServerState(js,JvnLockState.NL));
+            }else{
+                System.out.println("obj déja dedans : "+jon);
             }
-            jvnLockStateServ.put(js, JvnLockState.NL);
             
             return new JvnObjectImpl(joi,null);
         }catch (NullPointerException npe){
@@ -135,19 +133,16 @@ public class JvnCoordImpl
     public Serializable jvnLockRead(int joi, JvnRemoteServer js)
             throws java.rmi.RemoteException, JvnException {
 
-        List<JvnRemoteServer> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
+        List<JvnServerState> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
 
 
-
-        for (JvnRemoteServer jvnRemoteServ_tmp : jvnRemoteServerList) {
-
-
-	        switch (jvnLockStateServ.get(jvnRemoteServ_tmp)){
+        for (JvnServerState jvnServerState_tmp : jvnRemoteServerList) {
+	        switch (jvnServerState_tmp.getState()){
 	            case WLC:
 	            case WLT:
 	            case RLT_WLC:
-	                Serializable obj = jvnRemoteServ_tmp.jvnInvalidateWriterForReader(joi);
-	                jvnLockStateServ.put(js,JvnLockState.RLT);
+	                Serializable obj = jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateWriterForReader(joi);
+                    putStateToServer(joi,js,JvnLockState.RLT);
 	                return obj;
 	        
         	}
@@ -170,23 +165,23 @@ public class JvnCoordImpl
         // to be completed
 
 
-        List<JvnRemoteServer> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
+        List<JvnServerState> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
 
         Serializable obj=null;
 
-        for (JvnRemoteServer jvnRemoteServ_tmp : jvnRemoteServerList) {
-            switch (jvnLockStateServ.get(jvnRemoteServ_tmp)){
+        for (JvnServerState jvnServerState_tmp : jvnRemoteServerList) {
+            switch (jvnServerState_tmp.getState()){
             case WLC:
             case WLT:
             case RLT_WLC:
-                obj = jvnRemoteServ_tmp.jvnInvalidateWriter(joi);
-                jvnLockStateServ.put(jvnRemoteServ_tmp,JvnLockState.NL);
-                jvnLockStateServ.put(js,JvnLockState.WLT);
+                obj = jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateWriter(joi);
+                jvnServerState_tmp.setState(JvnLockState.NL);
+                putStateToServer(joi,js,JvnLockState.WLT);
                 break;
             case RLT:
             case RLC:
-                jvnRemoteServ_tmp.jvnInvalidateReader(joi);
-                jvnLockStateServ.put(jvnRemoteServ_tmp,JvnLockState.NL);
+                jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateReader(joi);
+                jvnServerState_tmp.setState(JvnLockState.NL);
             }
         	
 
@@ -205,6 +200,22 @@ public class JvnCoordImpl
             throws java.rmi.RemoteException, JvnException {
         // to be completed
         jvnRemoteServerMap.remove(js);
+    }
+
+
+    private void putStateToServer(int joi, JvnRemoteServer js,JvnLockState state){
+        List<JvnServerState> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
+        boolean jsAlreadyExists = false;
+        for (JvnServerState jServState : jvnRemoteServerList){
+            if(jServState.getJvnRemoteServer().equals(js)){
+                jServState.setState(state);
+                jsAlreadyExists = true;
+                break;
+            }
+        }
+        if (!jsAlreadyExists){
+            this.jvnRemoteServerMap.get(joi).add(new JvnServerState(js,state));
+        }
     }
 }
 
