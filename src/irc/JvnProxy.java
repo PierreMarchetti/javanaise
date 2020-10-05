@@ -25,8 +25,8 @@ public class JvnProxy implements InvocationHandler {
             // after creation, I have a write lock on the object
             jo.jvnUnLock();
             js.jvnRegisterObject("IRC", jo);
+            
         }
-	
 	
 	}
 

@@ -9,19 +9,10 @@
 
 package jvn;
 
-import irc.Irc;
-import irc.Sentence;
-import jdk.internal.util.xml.impl.Pair;
-
-import javax.swing.plaf.nimbus.State;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -88,8 +79,8 @@ public class JvnCoordImpl
         if(jvnRemoteServerMap.get(jo.jvnGetObjectId())==null) {
             jvnRemoteServerMap.put(jo.jvnGetObjectId(), new ArrayList<>());
         }
-        if (!jvnRemoteServerMap.get(jo.jvnGetObjectId()).contains(js)) {
-            jvnRemoteServerMap.get(jo.jvnGetObjectId()).add(new JvnServerState(js,JvnLockState.WLT));
+        if (jvnRemoteServerMap.get(jo.jvnGetObjectId()).stream().noneMatch((jss -> jss.getJvnRemoteServer().equals(js)))) {
+            jvnRemoteServerMap.get(jo.jvnGetObjectId()).add(new JvnServerState(js,JvnCoordLockState.W));
         }else{
             System.out.println("obj déja dedans : "+jon);
         }
@@ -107,8 +98,8 @@ public class JvnCoordImpl
             throws java.rmi.RemoteException, jvn.JvnException {
         try {
             Integer joi = listNameJvnServer.get(jon);
-            if (!jvnRemoteServerMap.get(joi).contains(js)) {
-                jvnRemoteServerMap.get(joi).add(new JvnServerState(js,JvnLockState.NL));
+            if (jvnRemoteServerMap.get(joi).stream().noneMatch((jss -> jss.getJvnRemoteServer().equals(js)))) {
+                jvnRemoteServerMap.get(joi).add(new JvnServerState(js,JvnCoordLockState.NL));
             }else{
                 System.out.println("obj déja dedans : "+jon);
             }
@@ -135,12 +126,12 @@ public class JvnCoordImpl
 
         for (JvnServerState jvnServerState_tmp : jvnRemoteServerList) {
 	        switch (jvnServerState_tmp.getState()){
-	            case WLC:
-	            case WLT:
-	            case RLT_WLC:
+	            case W:
 	                Serializable obj = jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateWriterForReader(joi);
-                    putStateToServer(joi,js,JvnLockState.RLT);
+                    putStateToServer(joi,js,JvnCoordLockState.R);
 	                return obj;
+			default:
+				break;
 	        
         	}
         }
@@ -166,21 +157,21 @@ public class JvnCoordImpl
         
         for (JvnServerState jvnServerState_tmp : jvnRemoteServerList) {
             switch (jvnServerState_tmp.getState()){
-            case WLC:
-            case WLT:
-            case RLT_WLC:
+            case W:
                 obj = jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateWriter(joi);
-                jvnServerState_tmp.setState(JvnLockState.NL);
+                jvnServerState_tmp.setState(JvnCoordLockState.NL);
                 break;
-            case RLT:
-            case RLC:
+            case R:
                 jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateReader(joi);
-                jvnServerState_tmp.setState(JvnLockState.NL);
+                jvnServerState_tmp.setState(JvnCoordLockState.NL);
+                break;
+			default:
+				break;
             }
         	
 
         }
-        putStateToServer(joi,js,JvnLockState.WLT);
+        putStateToServer(joi,js,JvnCoordLockState.W);
 
         return obj;
     }
@@ -201,7 +192,7 @@ public class JvnCoordImpl
     }
 
 
-    private void putStateToServer(int joi, JvnRemoteServer js,JvnLockState state){
+    private void putStateToServer(int joi, JvnRemoteServer js,JvnCoordLockState state){
         List<JvnServerState> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
         boolean jsAlreadyExists = false;
         for (JvnServerState jServState : jvnRemoteServerList){

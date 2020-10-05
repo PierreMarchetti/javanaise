@@ -2,23 +2,23 @@ package jvn;
 
 public class JvnServerState {
     JvnRemoteServer jvnRemoteServer;
-    JvnLockState state;
+    JvnCoordLockState state;
 
     public JvnServerState(JvnRemoteServer jvnRemoteServer) {
         this.jvnRemoteServer = jvnRemoteServer;
-        this.state = JvnLockState.NL;
+        this.state = JvnCoordLockState.NL;
     }
 
-    public JvnServerState(JvnRemoteServer jvnRemoteServer, JvnLockState state) {
+    public JvnServerState(JvnRemoteServer jvnRemoteServer, JvnCoordLockState state) {
         this.jvnRemoteServer = jvnRemoteServer;
         this.state = state;
     }
 
-    public JvnLockState getState() {
+    public JvnCoordLockState getState() {
         return state;
     }
 
-    public void setState(JvnLockState state) {
+    public void setState(JvnCoordLockState state) {
         this.state = state;
     }
 
