@@ -48,6 +48,8 @@ public class JvnObjectImpl implements JvnObject {
 		case WLT:
 			throw new JvnException("Lock already taken");
 		case WLC:
+			state = JvnLockState.WLT;
+			break;
 		default:
 	    	JvnServerImpl js = JvnServerImpl.jvnGetServer();
 	    	object = js.jvnLockWrite(id);
