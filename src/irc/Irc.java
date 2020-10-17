@@ -47,9 +47,9 @@ public class Irc {
 //            // create the graphical part of the Chat application
 //            new Irc(jo);
         	
-        	
-        	SentenceItf s = (SentenceItf) JvnProxy.newInstance(new Sentence()); 
-          new Irc(s);
+          SentenceItf s = (SentenceItf) JvnProxy.newInstance(Sentence.class,"IRC");
+          new Irc(s);     	
+
 
         } catch (Exception e) {
 //	        System.out.println("IRC problem : " + e.getMessage());
