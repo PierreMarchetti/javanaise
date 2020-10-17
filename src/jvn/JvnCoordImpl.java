@@ -118,7 +118,7 @@ public class JvnCoordImpl
      * @return the current JVN object state
      * @throws java.rmi.RemoteException, JvnException
      **/
-    public synchronized Serializable jvnLockRead(int joi, JvnRemoteServer js)
+    public Serializable jvnLockRead(int joi, JvnRemoteServer js)
             throws java.rmi.RemoteException, JvnException {
 
         List<JvnServerState> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
@@ -127,10 +127,12 @@ public class JvnCoordImpl
         for (JvnServerState jvnServerState_tmp : jvnRemoteServerList) {
 	        switch (jvnServerState_tmp.getState()){
 	            case W:
-	            	//todo synchronized
-	                Serializable obj = jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateWriterForReader(joi);
-                    putStateToServer(joi,js,JvnCoordLockState.R);
-	                return obj;
+	            	synchronized (this) {
+		                Serializable obj = jvnServerState_tmp.getJvnRemoteServer().jvnInvalidateWriterForReader(joi);
+	                    putStateToServer(joi,js,JvnCoordLockState.R);
+		                return obj;
+					}
+
 			default:
 				break;
 	        
@@ -193,7 +195,7 @@ public class JvnCoordImpl
     }
 
 
-    private synchronized void putStateToServer(int joi, JvnRemoteServer js,JvnCoordLockState state){
+    private void putStateToServer(int joi, JvnRemoteServer js,JvnCoordLockState state){
         List<JvnServerState> jvnRemoteServerList = this.jvnRemoteServerMap.get(joi);
         boolean jsAlreadyExists = false;
         for (JvnServerState jServState : jvnRemoteServerList){
