@@ -51,7 +51,7 @@ public class Irc {
                 System.out.println("Problème d'argument");
             }
         	
-        	SentenceItf s = (SentenceItf) JvnProxy.newInstance(Sentence.class,argv[0]);
+        	SentenceItf s = (SentenceItf) JvnProxy.newInstance(Sentence.class,"IRC");
           new Irc(s);     	
 //        	s.write("rertet");
 

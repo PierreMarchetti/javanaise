@@ -91,6 +91,7 @@ public class JvnServerImpl
 
 
             if (jvnObjectList.size()>=NB_COPY_LOCAL_MAX){
+            	System.out.println("Limite de cache atteinte lors de la création de l'objet");
                 JvnObjectImpl jvmObjImpl;
                 boolean isDelete = false;
                 for (JvnObject jvnObject : jvnObjectList){
@@ -98,6 +99,7 @@ public class JvnServerImpl
                     if(jvmObjImpl.state==JvnLockState.NL){
                         jvnObjectList.remove(jvnObject);
                         isDelete=true;
+                        System.out.println("suppression du cache en verrou NL de "+jvnObject);
                         break;
                     }
                 }
@@ -106,6 +108,7 @@ public class JvnServerImpl
                         jvmObjImpl = (JvnObjectImpl) jvnObject;
                         if (jvmObjImpl.state == JvnLockState.RLC) {
                             jvnObjectList.remove(jvnObject);
+                            System.out.println("suppression du cache en verrou RLC de "+jvnObject);
                             break;
                         }
                     }
@@ -154,12 +157,14 @@ public class JvnServerImpl
         	if(jo!=null) {
 
                 if (jvnObjectList.size()>=NB_COPY_LOCAL_MAX){
+                	System.out.println("Limite de cache atteinte lors du lookup de l'objet "+jon);
                     JvnObjectImpl jvmObjImpl;
                     boolean isDelete = false;
                     for (JvnObject jvnObject : jvnObjectList){
                         jvmObjImpl = (JvnObjectImpl)jvnObject;
                         if(jvmObjImpl.state==JvnLockState.NL){
                             jvnObjectList.remove(jvnObject);
+                            System.out.println("suppression du cache en verrou NL de "+jvnObject);
                             isDelete=true;
                             break;
                         }
@@ -168,6 +173,7 @@ public class JvnServerImpl
                         for (JvnObject jvnObject : jvnObjectList) {
                             jvmObjImpl = (JvnObjectImpl) jvnObject;
                             if (jvmObjImpl.state == JvnLockState.RLC) {
+                                System.out.println("suppression du cache en verrou RLC de "+jvnObject);
                                 jvnObjectList.remove(jvnObject);
                                 break;
                             }
