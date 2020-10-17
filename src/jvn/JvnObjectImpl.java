@@ -73,7 +73,7 @@ public class JvnObjectImpl implements JvnObject {
 		default:
 			break;
 		}
-    	notifyAll();
+    	notify();
     }
 
     @Override

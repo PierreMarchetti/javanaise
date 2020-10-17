@@ -46,14 +46,10 @@ public class Irc {
 //            }
 //            // create the graphical part of the Chat application
 //            new Irc(jo);
-
-            if(argv.length!=1){
-                System.out.println("Problème d'argument");
-            }
         	
-        	SentenceItf s = (SentenceItf) JvnProxy.newInstance(Sentence.class,"IRC");
+          SentenceItf s = (SentenceItf) JvnProxy.newInstance(Sentence.class,"IRC");
           new Irc(s);     	
-//        	s.write("rertet");
+
 
         } catch (Exception e) {
 //	        System.out.println("IRC problem : " + e.getMessage());
@@ -120,6 +116,7 @@ class readListener implements ActionListener {
             irc.text.append(s + "\n");
         } catch (Exception je) {
             System.out.println("IRC problem : " + je.getMessage());
+            je.printStackTrace();
         }
     }
 }
@@ -154,6 +151,7 @@ class writeListener implements ActionListener {
         	irc.sentence.write(s);
         } catch (Exception je) {
             System.out.println("IRC problem  : " + je.getMessage());
+            je.printStackTrace();
         }
     }
 }
