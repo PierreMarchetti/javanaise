@@ -141,6 +141,7 @@ public class JvnServerImpl
     public Serializable jvnLockRead(int joi)
             throws JvnException {
         try {
+        	System.out.println("demande de lock read dans serveur");
 			return coord.jvnLockRead(joi, this);
 		} catch (RemoteException e) {
 			throw new JvnException(e.getMessage());

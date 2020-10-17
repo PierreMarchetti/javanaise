@@ -49,8 +49,7 @@ public class Irc {
         	
         	
         	SentenceItf s = (SentenceItf) JvnProxy.newInstance(new Sentence()); 
-          new Irc(s);     	
-//        	s.write("rertet");
+          new Irc(s);
 
         } catch (Exception e) {
 //	        System.out.println("IRC problem : " + e.getMessage());
@@ -117,6 +116,7 @@ class readListener implements ActionListener {
             irc.text.append(s + "\n");
         } catch (Exception je) {
             System.out.println("IRC problem : " + je.getMessage());
+            je.printStackTrace();
         }
     }
 }
@@ -151,6 +151,7 @@ class writeListener implements ActionListener {
         	irc.sentence.write(s);
         } catch (Exception je) {
             System.out.println("IRC problem  : " + je.getMessage());
+            je.printStackTrace();
         }
     }
 }
