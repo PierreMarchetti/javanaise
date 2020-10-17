@@ -46,9 +46,12 @@ public class Irc {
 //            }
 //            // create the graphical part of the Chat application
 //            new Irc(jo);
+
+            if(argv.length!=1){
+                System.out.println("Problème d'argument");
+            }
         	
-        	
-        	SentenceItf s = (SentenceItf) JvnProxy.newInstance(new Sentence()); 
+        	SentenceItf s = (SentenceItf) JvnProxy.newInstance(Sentence.class,argv[0]);
           new Irc(s);     	
 //        	s.write("rertet");
 

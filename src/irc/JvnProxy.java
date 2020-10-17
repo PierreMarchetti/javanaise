@@ -13,36 +13,40 @@ public class JvnProxy implements InvocationHandler {
 	private Object object;
 	private JvnObject jo;
 
-	private JvnProxy() throws JvnException{
+	private JvnProxy(Class c, String jon) throws JvnException{
         JvnServerImpl js = JvnServerImpl.jvnGetServer();
 
         // look up the IRC object in the JVN server
         // if not found, create it, and register it in the JVN server
-        jo = js.jvnLookupObject("IRC");
+        jo = js.jvnLookupObject(jon);
 
-        if (jo == null) {
-            jo = js.jvnCreateObject((Serializable) new Sentence());
-            // after creation, I have a write lock on the object
-            jo.jvnUnLock();
-            js.jvnRegisterObject("IRC", jo);
-            
-        }
+        if (jo == null && c instanceof Serializable) {
+        	try {
+				jo = js.jvnCreateObject((Serializable)c.newInstance());
+				// after creation, I have a write lock on the object
+				jo.jvnUnLock();
+				js.jvnRegisterObject(jon, jo);
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			}
+		}
 	
 	}
 
-	public static Object newInstance(Object o) throws IllegalArgumentException, JvnException {
-		return java.lang.reflect.Proxy.newProxyInstance(o.getClass().getClassLoader(), o.getClass().getInterfaces(),
-				new JvnProxy());
+	public static Object newInstance(Class c, String jon) throws IllegalArgumentException, JvnException {
+		return java.lang.reflect.Proxy.newProxyInstance(c.getClassLoader(), c.getInterfaces(),
+				new JvnProxy(c,jon));
 	}
 
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-		
-		System.out.println("proxy");
+
 		Serializable s;
 		if(method.isAnnotationPresent(SentenceMethodLockType.class)) {
 			SentenceMethodLockType lockType = method.getAnnotation(SentenceMethodLockType.class);
-			System.out.println("annotation: "+lockType.name());
+			//System.out.println("annotation: "+lockType.name());
 			
 			switch (lockType.name()) {
 			case "write":

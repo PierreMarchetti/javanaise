@@ -14,9 +14,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 public class JvnServerImpl
@@ -26,6 +24,8 @@ public class JvnServerImpl
     /**
      *
      */
+    final int NB_COPY_LOCAL_MAX = 3;
+
     private static final long serialVersionUID = 1L;
     // A JVN server is managed as a singleton
     private static JvnServerImpl js = null;
@@ -43,7 +43,7 @@ public class JvnServerImpl
         // to be completed
         Registry registry = LocateRegistry.getRegistry("localhost",2001);
         coord = (JvnRemoteCoord) registry.lookup("IRC");
-        jvnObjectList = new ArrayList<>();
+        jvnObjectList = Collections.synchronizedList(new LinkedList<>());
         System.out.println("Connexion Server");
     }
 
@@ -88,7 +88,36 @@ public class JvnServerImpl
             throws jvn.JvnException {
         try {
         	JvnObject jo = new JvnObjectImpl(coord.jvnGetObjectId(), o, JvnLockState.WLT);
-            jvnObjectList.add(jo);
+
+
+            if (jvnObjectList.size()>=NB_COPY_LOCAL_MAX){
+                JvnObjectImpl jvmObjImpl;
+                boolean isDelete = false;
+                for (JvnObject jvnObject : jvnObjectList){
+                    jvmObjImpl = (JvnObjectImpl)jvnObject;
+                    if(jvmObjImpl.state==JvnLockState.NL){
+                        jvnObjectList.remove(jvnObject);
+                        isDelete=true;
+                        break;
+                    }
+                }
+                if(!isDelete) {
+                    for (JvnObject jvnObject : jvnObjectList) {
+                        jvmObjImpl = (JvnObjectImpl) jvnObject;
+                        if (jvmObjImpl.state == JvnLockState.RLC) {
+                            jvnObjectList.remove(jvnObject);
+                            break;
+                        }
+                    }
+                }
+            }
+            if(jvnObjectList.size()<NB_COPY_LOCAL_MAX) {
+                jvnObjectList.add(jo);
+            }else{
+                System.out.println("Limite de copy local atteinte");
+            }
+
+
             return jo;
         }catch (RemoteException e){
             throw new JvnException(e.getMessage());
@@ -123,7 +152,34 @@ public class JvnServerImpl
         try {
         	JvnObject jo = coord.jvnLookupObject(jon,this);
         	if(jo!=null) {
-                jvnObjectList.add(jo);
+
+                if (jvnObjectList.size()>=NB_COPY_LOCAL_MAX){
+                    JvnObjectImpl jvmObjImpl;
+                    boolean isDelete = false;
+                    for (JvnObject jvnObject : jvnObjectList){
+                        jvmObjImpl = (JvnObjectImpl)jvnObject;
+                        if(jvmObjImpl.state==JvnLockState.NL){
+                            jvnObjectList.remove(jvnObject);
+                            isDelete=true;
+                            break;
+                        }
+                    }
+                    if(!isDelete) {
+                        for (JvnObject jvnObject : jvnObjectList) {
+                            jvmObjImpl = (JvnObjectImpl) jvnObject;
+                            if (jvmObjImpl.state == JvnLockState.RLC) {
+                                jvnObjectList.remove(jvnObject);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if(jvnObjectList.size()<NB_COPY_LOCAL_MAX) {
+                    jvnObjectList.add(jo);
+                }else{
+                    System.out.println("Saturation du cache");
+                }
+
             }
             return jo;
         }catch (RemoteException e){
